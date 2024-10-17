@@ -1,0 +1,2 @@
+# BlazorProjects
+Projects on Blazor
