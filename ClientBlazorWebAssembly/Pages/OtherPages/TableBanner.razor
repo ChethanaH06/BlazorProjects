@@ -1,0 +1,135 @@
+﻿<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-2 cursorStyle">
+            <div class="card border-primary" @onclick="EmployeeClicked">
+                <div class="card-header">
+                    <i class="bi bi-people text-primary" style="font-size: 16px;"></i> Employees
+                    <span class="badge bg-primary fs-6 small-badge">@Employees.Count</span>    
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 cursorStyle" >
+            <div class="card border-success" @onclick="VacationClicked">
+                <div class="card-header">
+                    <i class="bi bi-backpack3 text-success" style="font-size: 16px;"></i> Vacation
+                    <span class="badge bg-success fs-6 small-badge">@Vacations.Count</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 cursorStyle" >
+            <div class="card border-danger" @onclick="OvertimeClicked">
+                <div class="card-header">
+                    <i class="bi bi-stopwatch text-danger" style="font-size: 16px;"></i> Overtime
+                    <span class="badge bg-danger fs-6 small-badge">@Overtimes.Count</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 cursorStyle" >
+            <div class="card border-warning" @onclick="HealthClicked">
+                <div class="card-header">
+                    <i class="bi bi-hospital text-warning" style="font-size: 16px;"></i> Doctor
+                    <span class="badge bg-warning fs-6 small-badge">@Health.Count</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 cursorStyle" @onclick="SanctionClicked">
+            <div class="card border-info">
+                <div class="card-header">
+                    <i class="bi bi-x-octagon text-info" style="font-size: 16px;"></i> Sanction
+                    <span class="badge bg-info fs-6 small-badge" >@Sanctions.Count</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 cursorStyle" @onclick="DepartmentClicked">
+            <div class="card border-dark">
+                <div class="card-header">
+                    <i class="bi bi-slack text-dark" style="font-size: 16px;"></i> Department
+                    <span class="badge bg-dark fs-6 small-badge">@Departments.Count</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+
+    /* Row Styling */
+    .row {
+        margin-left: -30px; /* Shift the entire row slightly to the right */
+    }
+
+    /* Cursor Pointer Styling */
+    .cursorStyle {
+        cursor: pointer;
+        padding: 5px; /* Adding some padding for better spacing */
+    }
+
+    /* Card Styling */
+    .card {
+        width: 100%; /* Ensures the card takes up full column width */
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* Centers content vertically */
+        overflow: hidden; /* Ensures overflow text doesn't break layout */
+    }
+
+    /* Card Header Styling */
+    .card-header {
+        text-align: center; /* Centers text in the header */
+        font-size: 16px; /* Adjust the font size as needed */
+        overflow: hidden; /* Prevents overflow of text */
+        white-space: nowrap; /* Prevents text from wrapping to the next line */
+    }
+
+        /* Icon Styling */
+        .card-header i {
+            font-size: 24px; /* Adjust the icon size */
+            margin-bottom: 5px; /* Space between icon and text */
+        }
+
+    /* Additional Spacing */
+    .card + .card {
+        margin-left: 10px; /* Adds space between cards */
+    }
+
+     .small-badge{
+        font-size: 10px;
+        padding: 2px 6px;
+        height: auto;
+        line-height: 1;
+    }
+</style>
+
+@code{
+    public List<Employee> Employees { get; set; } = new();
+    public List<Department> Departments { get; set; } = new();
+    public List<Overtime> Overtimes { get; set; } = new();
+    public List<Sanction> Sanctions { get; set; } = new();
+    public List<Vacation> Vacations { get; set; } = new();
+    public List<Doctor> Health { get; set; } = new();
+
+    protected async override Task OnInitializedAsync()
+    {
+        allState.Action+=StateHasChanged;
+        await LoadDefaults();
+    }
+
+    async Task LoadDefaults()
+    {
+        Employees = await employeeService.GetAll(Constants.EmployeeBaseUrl);
+        Departments = await departmentService.GetAll(Constants.DepartmentBaseUrl);
+        Overtimes = await overtimeService.GetAll(Constants.OvertimeBaseUrl);
+        Sanctions = await sanctionService.GetAll(Constants.SanctionBaseUrl);
+        Vacations = await vacationService.GetAll(Constants.VacationBaseUrl);
+        Health = await doctorService.GetAll(Constants.DoctorBaseUrl);
+    }
+
+    void EmployeeClicked() => allState.EmployeeClicked();
+    void HealthClicked() => allState.HealthClicked();
+    void OvertimeClicked() => allState.OvertimeClicked();
+    void SanctionClicked() => allState.SanctionClicked();
+    void VacationClicked() => allState.VacationClicked();
+    void DepartmentClicked() => allState.DepartmentClicked();
+
+    public void Dispose() => allState.Action -= StateHasChanged;
+}
