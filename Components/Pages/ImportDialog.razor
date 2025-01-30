@@ -1,0 +1,67 @@
+﻿@using BlazorEmployeeCRUD.Services
+@using BlazorEmployeeCRUD.ViewModels
+@inject EmployeeService EmployeeService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudDataGrid Filterable="false" Items="@employees" SortMode="@SortMode.None" >
+            <Columns>
+                <PropertyColumn Property="x=>x.FullName" Title="Full Name" />
+                <PropertyColumn Property="x=>x.Department" />
+                <PropertyColumn Property="x=>x.DateOfBirth" Format="dd MMM yyyy" Title="Date Of Birth" />
+                <PropertyColumn Property="x=>x.Age" />
+                <PropertyColumn Property="x=>x.PhoneNumber" />
+                    <TemplateColumn CellClass="d-flex justify-end">
+                        <CellTemplate>
+                            <MudButton 
+                                Size="@Size.Small" 
+                                Variant="@Variant.Filled" 
+                                OnClick="@(()=>RemoveEmployee(context))"
+                                StartIcon="@Icons.Material.Filled.Delete"
+                                Color="Color.Error">
+                                Remove
+                            </MudButton>
+                        </CellTemplate>
+                    </TemplateColumn>
+            </Columns>
+            <PagerContent>
+                <MudDataGridPager T="EmployeeViewModel" />
+            </PagerContent>
+        </MudDataGrid>
+    </DialogContent>
+    <DialogContent>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Submit"Color="Color.Primary" Variant="Variant.Filled">Import</MudButton>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [Parameter]
+    public List<EmployeeViewModel> employees{ get; set; }=new List<EmployeeViewModel>();
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog{ get; set; }
+
+    private async Task Submit()
+    {
+        var result=await EmployeeService.ImportEmployee(employees);
+        if (result)
+        {
+            Snackbar.Add("Successfully import the employee", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            Snackbar.Add("Failed to import the employee", Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task RemoveEmployee(CellContext<EmployeeViewModel> employee)
+    {
+        employees.Remove(employee.Item);
+        StateHasChanged();
+    }
+}

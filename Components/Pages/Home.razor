@@ -1,0 +1,271 @@
+﻿@page "/"
+
+@using System.Threading
+@using BlazorEmployeeCRUD.Enum
+@using BlazorEmployeeCRUD.ViewModels
+@using BlazorEmployeeCRUD.Services
+@using ClosedXML.Excel
+@inject EmployeeService EmployeeService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject JSRuntime JS
+
+@rendermode InteractiveServer
+
+<PageTitle>Home</PageTitle>
+<h3 class="text-center">
+    Employee Management
+</h3>
+
+<MudDataGrid @ref="dataGrid" T="EmployeeViewModel" ServerData="ServerReload" Filterable="false">
+    <ToolBarContent>
+        <MudButton Class="me-2" @onclick="CreateNewUser" StartIcon="@Icons.Material.Filled.PersonAddAlt1" Variant="Variant.Filled" Color="Color.Primary">
+            Add New Employee
+        </MudButton>
+
+        <MudFileUpload Class="me-2" T="IBrowserFile" @ref="excelUpload" FilesChanged="UploadFile">
+            <ActivatorContent>
+                <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Custom.FileFormats.FileExcel">Import Excel</MudButton>
+            </ActivatorContent>
+        </MudFileUpload>
+
+        <MudButton @onclick="ExportToExcel" Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Custom.FileFormats.FileExcel">Export Excel</MudButton>
+
+        <MudSpacer />
+        <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="x => x.EmployeeIdView" Title="Employee Id" />
+        <PropertyColumn Property="x=>x.FullName" Title="Full Name"/>
+        <PropertyColumn Property="x=>x.Department"/>
+        <PropertyColumn Property="x=>x.DateOfBirth" Format="dd MMM yyyy" Title="Date Of Birth"/>
+        <PropertyColumn Property="x=>x.Age"/>
+        <PropertyColumn Property="x=>x.PhoneNumber"/>
+        <TemplateColumn CellClass="d-flex justify-end">
+            <CellTemplate>
+                <MudButton Class="me-2"
+                           Size="@Size.Small"
+                           Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           Color="@Color.Warning"
+                           OnClick="@(()=>this.UpdateEmployee(context))">
+                    Update
+                </MudButton>
+
+                <MudButton Size="@Size.Small"
+                           Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.Delete"
+                           Color="@Color.Error"
+                           OnClick="@(()=>this.RemoveEmployee(context))">
+                    Remove
+                </MudButton>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="EmployeeViewModel" />
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+    MudDataGrid<EmployeeViewModel> dataGrid;
+    MudFileUpload<IBrowserFile> excelUpload;
+    string searchString = null;
+
+    private async Task<GridData<EmployeeViewModel>> ServerReload(GridState<EmployeeViewModel> state)
+    {
+        IEnumerable<EmployeeViewModel> data = await EmployeeService.GetAllEmployees();
+        await Task.Delay(300);
+        data = data.Where(element =>
+        {
+            if (string.IsNullOrWhiteSpace(searchString))
+                return true;
+            if (element.EmployeeIdView.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (element.FullName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            return false;
+        }).ToArray();
+        var totalItems = data.Count();
+
+        var sortDefinition = state.SortDefinitions.FirstOrDefault();
+        if (sortDefinition != null)
+        {
+            switch (sortDefinition.SortBy)
+            {
+                case nameof(EmployeeViewModel.EmployeeIdView):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.EmployeeIdView
+                    );
+                    break;
+                case nameof(EmployeeViewModel.FullName):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.FullName
+                    );
+                    break;
+                case nameof(EmployeeViewModel.Department):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.Department
+                    );
+                    break;
+                case nameof(EmployeeViewModel.DateOfBirth):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.DateOfBirth
+                    );
+                    break;
+                case nameof(EmployeeViewModel.Age):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.Age
+                    );
+                    break;
+                case nameof(EmployeeViewModel.PhoneNumber):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.PhoneNumber
+                    );
+                    break;
+            }
+        }
+
+        var pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        return new GridData<EmployeeViewModel>
+            {
+                TotalItems = totalItems,
+                Items = pagedData
+            };
+    }
+
+    private Task OnSearch(string text)
+    {
+        searchString = text;
+        return dataGrid.ReloadServerData();
+    }
+
+    private async Task CreateNewUser()
+    {
+        var options = new DialogOptions { MaxWidth = MaxWidth.Large };
+
+        var parameters = new DialogParameters<CreateorUpdateEmployee>
+        {
+            {x =>x.Action,UIActionEnum.Insert},
+            {x =>x.model,new EmployeeViewModel()}
+        };
+
+        var dialogs = await DialogService.ShowAsync<CreateorUpdateEmployee>("Add Employee", parameters,options);
+        var result = await dialogs.Result;
+
+        if(result is not null && !result.Canceled)
+        {
+            await dataGrid.ReloadServerData();
+        }
+    }
+
+    private async Task UpdateEmployee(CellContext<EmployeeViewModel> employee)
+    {
+        var employeeView = EmployeeService.FindEmployee(employee.Item.EmployeeId);
+        if(employeeView is null)
+        {
+            Snackbar.Add("Something went wrong, when try find the employee",Severity.Error);
+            return;
+        }
+        var options = new DialogOptions { MaxWidth = MaxWidth.Large };
+
+        var parameters = new DialogParameters<CreateorUpdateEmployee>
+        {
+            {x =>x.Action,UIActionEnum.Update},
+            {x =>x.model,employeeView},
+            {x =>x._date,employeeView.DateOfBirth},
+        };
+
+        var dialogs = await DialogService.ShowAsync<CreateorUpdateEmployee>("Upadte Employee", parameters, options);
+        var result = await dialogs.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await dataGrid.ReloadServerData();
+        }
+    }
+
+    private async Task RemoveEmployee(CellContext<EmployeeViewModel> employee)
+    {
+        var dialog=await DialogService.ShowAsync<RemoveConfirmationDialog>("Remove: "+employee.Item.FullName);
+        var result=await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            var confirmed = (bool)(result.Data ?? false);
+            if (confirmed)
+            {
+                var deleteResult = EmployeeService.DeleteEmployee(employee.Item.EmployeeId);
+                if (deleteResult)
+                {
+                    Snackbar.Add("Successfully remove the employee!", Severity.Success);
+                    await dataGrid.ReloadServerData();
+                }
+                else
+                {
+                    Snackbar.Add("Failed to remove the employee!", Severity.Error);
+                }
+            }
+        }
+    }
+
+    private async Task UploadFile(IBrowserFile file)
+    {
+        if (file is null) return;
+        try
+        {
+            using var stream=new MemoryStream();
+            await file.OpenReadStream().CopyToAsync(stream);
+
+            stream.Position=0;
+
+            using var workbook=new XLWorkbook(stream);
+            var worksheet=workbook.Worksheets.First();
+
+            var rows = worksheet.RowsUsed().Skip(1);
+
+            List<EmployeeViewModel> employees=new List<EmployeeViewModel>();
+            foreach(var row in rows)
+            {
+                EmployeeViewModel employeeViewModel = new EmployeeViewModel
+                    {
+                        FullName = row.Cell(1).Value.ToString(),
+                        Department = row.Cell(2).Value.ToString(),
+                        DateOfBirth=row.Cell(3).Value,
+                        Age=int.Parse(row.Cell(4).Value.ToString()),
+                        PhoneNumber=row.Cell(5).Value.ToString(),
+                    };
+                employees.Add(employeeViewModel);
+            }
+            var parameters = new DialogParameters<ImportDialog>
+            {
+                {x=>x.employees,employees}
+            };
+
+            var options=new DialogOptions(){MaxWidth=MaxWidth.Large};
+            var dialog = await DialogService.ShowAsync<ImportDialog>("Ready to import", parameters, options);
+            var result = await dialog.Result;
+
+            if(result!=null && !result.Canceled)
+            {
+                await dataGrid.ReloadServerData();
+            }
+        }
+        catch(Exception ex)
+        {
+
+        }
+        await excelUpload.ClearAsync();
+    }
+    private async Task ExportToExcel()
+    {
+        var excelBytes = await EmployeeService.ExporttoExcel();
+    }
+}

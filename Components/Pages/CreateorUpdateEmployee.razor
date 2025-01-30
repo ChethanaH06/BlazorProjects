@@ -1,0 +1,111 @@
+﻿@using BlazorEmployeeCRUD.Enum
+@using BlazorEmployeeCRUD.Services
+@using BlazorEmployeeCRUD.ViewModels
+
+@inject ISnackbar Snackbar
+@inject EmployeeService EmployeeService
+
+<EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+    <MudDialog>
+        <DialogContent>
+            <DataAnnotationsValidator/>
+            <MudGrid Class="mb-5">
+                <MudItem xs="9"> 
+                    <MudTextField 
+                        Variant="Variant.Outlined" 
+                        ShrinkLabel 
+                        Label="Full Name"
+                        @bind-Value="model.FullName" 
+                        For="@(()=>model.FullName)"/>
+                </MudItem>
+                <MudItem xs="3">
+                    <MudTextField 
+                        Variant="Variant.Outlined"
+                        ShrinkLabel
+                        Label="Age"
+                        @bind-Value="model.Age"
+                        For="@(()=>model.Age)" />
+                </MudItem>
+            </MudGrid>
+            <MudDatePicker Class="mb-5" Variant="Variant.Outlined" Label="Date Of Birth" @bind-Date="_date" />
+            <MudTextField Class="mb-5"
+                    Variant="Variant.Outlined"
+                    ShrinkLabel
+                    Label="Department"
+                    @bind-Value="model.Department"
+                    For="@(()=>model.Department)" />
+            <MudTextField 
+                    Variant="Variant.Outlined"
+                    ShrinkLabel
+                    Label="Phone Number"
+                    @bind-Value="model.PhoneNumber"
+                    For="@(()=>model.PhoneNumber)" />
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Save</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code{
+    [Parameter]
+    public UIActionEnum Action{ get; set; }=UIActionEnum.Insert;
+
+    [Parameter]
+    public DateTime? _date { get; set; } = DateTime.Today;
+
+    [Parameter]
+    public EmployeeViewModel model { get; set; } = new EmployeeViewModel();
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    private async Task OnValidSubmit(EditContext editContext)
+    {
+        if(_date is not null)
+        {
+            model.DateOfBirth = _date.Value;
+        }
+        if (Action == UIActionEnum.Insert)
+        {
+            CreateEmployee();
+        }
+        else if (Action == UIActionEnum.Update)
+        {
+            UpdateEmployee();
+        }
+    }
+
+    private void CreateEmployee()
+    {
+        var result = EmployeeService.CreateNewEmployee(model);
+        if (result)
+        {
+            Snackbar.Add("Successfully created!", Severity.Success);
+            MudDialog.Close();
+        }
+        else
+        {
+            Snackbar.Add("Failed to create!!!", Severity.Error);
+        }
+    }
+
+    private void UpdateEmployee()
+    {
+        var result = EmployeeService.UpdateEmployee(model);
+        if (result)
+        {
+            Snackbar.Add("Successfully updated!", Severity.Success);
+            MudDialog.Close();
+        }
+        else
+        {
+            Snackbar.Add("Failed to update!!!", Severity.Error);
+        }
+    }
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}
