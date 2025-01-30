@@ -1,0 +1,41 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\chethana.h\\source\\repos\\BlazorEmployeeCRUD\\BlazorEmployeeCRUD\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\BlazorEmployeeCRUD.bundle.scp.css",
+      "PackagePath": "staticwebassets\\BlazorEmployeeCRUD.bundle.scp.css"
+    },
+    {
+      "Id": "C:\\Users\\chethana.h\\source\\repos\\BlazorEmployeeCRUD\\BlazorEmployeeCRUD\\wwwroot\\app.css",
+      "PackagePath": "staticwebassets\\app.css"
+    },
+    {
+      "Id": "C:\\Users\\chethana.h\\source\\repos\\BlazorEmployeeCRUD\\BlazorEmployeeCRUD\\wwwroot\\bootstrap\\bootstrap.min.css",
+      "PackagePath": "staticwebassets\\bootstrap\\bootstrap.min.css"
+    },
+    {
+      "Id": "C:\\Users\\chethana.h\\source\\repos\\BlazorEmployeeCRUD\\BlazorEmployeeCRUD\\wwwroot\\bootstrap\\bootstrap.min.css.map",
+      "PackagePath": "staticwebassets\\bootstrap\\bootstrap.min.css.map"
+    },
+    {
+      "Id": "C:\\Users\\chethana.h\\source\\repos\\BlazorEmployeeCRUD\\BlazorEmployeeCRUD\\wwwroot\\favicon.png",
+      "PackagePath": "staticwebassets\\favicon.png"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.BlazorEmployeeCRUD.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.BlazorEmployeeCRUD.props",
+      "PackagePath": "build\\BlazorEmployeeCRUD.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.BlazorEmployeeCRUD.props",
+      "PackagePath": "buildMultiTargeting\\BlazorEmployeeCRUD.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildTransitive.BlazorEmployeeCRUD.props",
+      "PackagePath": "buildTransitive\\BlazorEmployeeCRUD.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
